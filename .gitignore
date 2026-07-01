@@ -1,0 +1,8 @@
+node_modules/
+data/
+out/
+assets/fonts/*.ttf
+assets/fonts/*.otf
+assets/fonts/*.woff
+.env
+.DS_Store

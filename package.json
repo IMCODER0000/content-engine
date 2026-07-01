@@ -1,0 +1,36 @@
+{
+  "name": "content-engine",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Anti-slop typographic content engine for philosophy/satire SNS",
+  "scripts": {
+    "fonts": "tsx scripts/fetch-fonts.ts",
+    "generate": "tsx src/pipeline.ts",
+    "matrix": "tsx scripts/matrix.ts",
+    "meme": "tsx scripts/meme.ts",
+    "gallery": "tsx scripts/gallery.ts",
+    "serve": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "deck": "tsx src/carousel.ts",
+    "deck-demo": "tsx scripts/deck-demo.ts",
+    "satire-demo": "tsx scripts/satire-demo.ts",
+    "satire-demo-kr": "tsx scripts/satire-demo-kr.ts",
+    "review": "tsx src/review.ts",
+    "publish": "tsx src/publish-cli.ts",
+    "test": "tsx test/run.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "dotenv": "^16.4.5",
+    "satori": "^0.12.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>콘텐츠 엔진 — 스튜디오</title>
+<style>
+:root{
+  --bg:#171719;--rail:#101012;--panel:#1c1c20;--panel2:#131316;--field:#0f0f12;--stage:#0a0a0c;
+  --ink:#e8e8ec;--mut:#8a8a93;--faint:#585862;--line:#2a2a31;--line2:#202027;
+  --accent:#5b8cff;--accent-d:#4a78f0;--accent-w:rgba(91,140,255,.15);
+  --ok:#5ec88a;--err:#ff7a6b;
+}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:13px/1.5 'Pretendard','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  display:grid;grid-template-rows:auto 1fr;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#2c2c34;border-radius:6px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-track{background:transparent}
+svg{display:block}
+
+/* topbar */
+.topbar{display:flex;align-items:center;gap:16px;height:46px;padding:0 16px;background:var(--rail);border-bottom:1px solid var(--line)}
+.brand{font-weight:700;font-size:14px;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
+.brand .m{width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,var(--accent),#8f6bff)}
+.brand small{color:var(--faint);font-size:10px;letter-spacing:2px;font-weight:600}
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{padding:5px 14px;border:0;background:transparent;color:var(--mut);cursor:pointer;font-size:12px;font-weight:600;border-radius:6px}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tgl{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:12px;cursor:pointer}
+.tgl input{accent-color:var(--accent)}
+.tb-btn{border:1px solid var(--line);background:var(--panel2);color:var(--mut);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600}
+.tb-btn:hover{color:var(--ink);border-color:#3a3a44}
+.tb-btn.solid{background:var(--accent);border-color:var(--accent);color:#fff}.tb-btn.solid:hover{background:var(--accent-d)}
+.hint{color:var(--faint);font-size:11px}
+
+/* workspace: rail | panel | stage */
+.ws{display:grid;grid-template-columns:66px 306px 1fr;min-height:0}
+.rail{background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:8px 0;gap:2px}
+.railitem{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px;margin:0 6px;border:0;background:transparent;color:var(--mut);cursor:pointer;border-radius:9px;font-size:10.5px;font-weight:600;position:relative}
+.railitem:hover{background:var(--panel2);color:var(--ink)}
+.railitem.on{background:var(--accent-w);color:#a9c2ff}
+.railitem.on::before{content:"";position:absolute;left:-6px;top:16%;bottom:16%;width:2.5px;border-radius:2px;background:var(--accent)}
+.railitem svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:14px 15px 20px}
+.panel h3{font-size:11px;letter-spacing:.6px;color:var(--ink);margin:0 0 13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel .sub{font-size:10.5px;color:var(--faint);margin:-8px 0 12px}
+.grp{margin-bottom:16px}
+.grp>label,label{display:block;font-size:10.5px;color:var(--mut);margin:0 0 5px;font-weight:600}
+input[type=text],input:not([type]),select,textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink);transition:border-color .14s,box-shadow .14s}
+input::placeholder{color:#4a4a55}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-w)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 15px) 15px,calc(100% - 10px) 15px;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+textarea{resize:vertical;min-height:46px;line-height:1.45}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.cfields{display:flex;flex-direction:column;gap:11px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=color]{height:32px;padding:3px;border-radius:7px;cursor:pointer;width:100%;background:var(--field);border:1px solid var(--line)}
+.cc{display:flex;align-items:center;gap:7px;color:var(--ink);font-size:12px;cursor:pointer;font-weight:500;margin:0 0 9px}.cc input{accent-color:var(--accent)}
+
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.thumb{border:1.5px solid var(--line);background:var(--field);border-radius:9px;padding:5px;cursor:pointer;transition:.13s;text-align:center}
+.thumb:hover{border-color:#3f3f4a}.thumb.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-w)}
+.thumb img{width:100%;border-radius:5px;display:block;aspect-ratio:4/5;object-fit:cover;background:#000}
+.thumb span{font-size:10px;color:var(--mut);display:block;margin-top:4px}.thumb.on span{color:#a9c2ff}
+
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;padding:9px 12px;font-weight:600;font-size:12px;cursor:pointer;width:100%;transition:.13s}
+.btn:hover{border-color:var(--accent);color:#a9c2ff}
+.btn.solid{background:var(--accent);border-color:var(--accent);color:#fff}.btn.solid:hover{background:var(--accent-d);color:#fff}
+.inline{display:flex;gap:8px;align-items:end}.inline .grow{flex:1}.inline .btn{width:auto;white-space:nowrap}
+.filerow{display:flex;gap:7px;align-items:center}.filerow input[type=file]{font-size:11px;padding:5px;color:var(--mut)}
+details.adv{border-top:1px solid var(--line2);margin-top:13px;padding-top:11px}
+details.adv summary{cursor:pointer;color:var(--mut);font-size:11.5px;font-weight:600;list-style:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::before{content:"▸ ";color:var(--accent)}details.adv[open] summary::before{content:"▾ "}
+.tip{font-size:10.5px;color:var(--faint);margin-top:8px;line-height:1.55}.tip code{background:var(--accent-w);padding:1px 5px;border-radius:4px;color:#a9c2ff}
+
+/* stage / monitor */
+.stage{background:var(--stage);display:flex;flex-direction:column;min-width:0}
+.monitor{flex:1;display:flex;align-items:center;justify-content:center;padding:26px;position:relative;overflow:auto;
+  background:radial-gradient(70% 60% at 50% 40%,rgba(91,140,255,.06),transparent 70%)}
+.pv{position:relative;display:inline-block;line-height:0}
+img.art{max-height:56vh;max-width:100%;border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);transition:opacity .15s}
+.safezone{position:absolute;inset:7%;border:1.5px dashed rgba(91,140,255,.8);border-radius:3px;pointer-events:none}
+.safezone::after{content:"세이프존";position:absolute;top:-9px;left:8px;background:var(--accent);color:#fff;font-size:9px;padding:1px 6px;border-radius:4px}
+.empty{color:var(--faint);font-size:12.5px}
+img.strip{max-width:100%;border-radius:7px;box-shadow:0 18px 44px rgba(0,0,0,.55)}
+/* filmstrip */
+.filmstrip{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.filmstrip a{line-height:0;flex:none}.filmstrip img{height:74px;border-radius:5px;border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,.5)}
+/* toolbar under monitor */
+.toolbar{border-top:1px solid var(--line);background:var(--rail);padding:9px 14px;display:flex;flex-direction:column;gap:9px}
+.tbrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.status{color:var(--mut);font-size:11.5px;min-height:15px;margin-left:auto}.status.err{color:var(--err)}.status.ok{color:var(--ok)}
+.ratios{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px}
+.ratios button{border:0;background:transparent;color:var(--mut);padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+.ratios button.on{background:var(--accent);color:#fff}
+.chipbtn{border:1px solid var(--line);background:var(--panel2);color:var(--mut);padding:6px 11px;border-radius:7px;cursor:pointer;font-size:11.5px;font-weight:600}
+.chipbtn:hover{color:var(--ink);border-color:#3a3a44}.chipbtn.on{color:#a9c2ff;border-color:var(--accent)}
+.abtn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;text-decoration:none;display:inline-block}
+.abtn:hover{border-color:var(--accent);color:#a9c2ff}
+.abtn.solid{background:var(--accent);border-color:var(--accent);color:#fff}.abtn.solid:hover{background:var(--accent-d);color:#fff}
+.vargrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 14px 12px}
+.vargrid button{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:5px;cursor:pointer}
+.vargrid button:hover{border-color:var(--accent)}.vargrid img{width:100%;border-radius:4px;display:block}.vargrid span{font-size:10px;color:var(--mut);display:block;margin-top:3px;text-align:center}
+/* backlog */
+.plist{display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;align-items:center;gap:7px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.prow .nm{flex:1;font-size:11.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prow .nm:hover{color:#a9c2ff}
+.badge{font-size:9px;padding:2px 6px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.badge.완성{color:#a9c2ff;border-color:var(--accent)}.badge.발행{color:var(--ok);border-color:#2f6a45}.badge.초안{color:var(--mut)}
+.prow select{width:auto;padding:2px 20px 2px 7px;font-size:10px}.prow .x{color:var(--faint);cursor:pointer;font-size:14px;padding:0 2px}
+pre.plan{white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--field);border:1px solid var(--line);border-radius:7px;padding:10px;margin:10px 0 0;max-height:150px;overflow:auto;font-family:'SF Mono',ui-monospace,Menlo,monospace}
+/* grid areas (좌측 기본) */
+.ws{grid-template-areas:"rail panel stage"}
+.rail{grid-area:rail}.panel{grid-area:panel}.stage{grid-area:stage}
+
+/* ===== 하단 레이아웃 (컨트롤 덱) ===== */
+body.bottom .ws{grid-template-columns:1fr;grid-template-rows:1fr auto auto;grid-template-areas:"stage" "rail" "panel"}
+body.bottom .rail{flex-direction:row;justify-content:center;flex-wrap:wrap;gap:5px;border-right:0;border-top:1px solid var(--line);padding:6px 10px}
+body.bottom .railitem{flex-direction:row;gap:7px;padding:7px 16px;margin:0;border-radius:8px}
+body.bottom .railitem svg{width:16px;height:16px}
+body.bottom .railitem.on::before{left:10%;right:10%;top:auto;bottom:-6px;width:auto;height:2.5px}
+body.bottom .panel{border-right:0;border-top:1px solid var(--line);max-height:40vh;overflow-y:auto;padding:15px 20px 18px}
+body.bottom [data-sec]{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-start;max-width:1440px;margin:0 auto}
+body.bottom [data-sec]>h3,body.bottom [data-sec]>.sub{display:none}
+body.bottom [data-sec]>*{flex:0 1 210px;margin:0}
+body.bottom .grp{margin:0}
+body.bottom #s-fields,body.bottom #d-fields{flex:3 1 400px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+body.bottom #s-formatgrid,body.bottom #s-presets,body.bottom #d-presets{flex:2 1 440px;display:flex;gap:9px;overflow-x:auto;padding-bottom:5px}
+body.bottom #s-formatgrid .thumb,body.bottom #s-presets .thumb,body.bottom #d-presets .thumb{flex:0 0 98px}
+body.bottom #plist{flex:2 1 380px}
+body.bottom details.adv{flex:1 1 100%;border-top:1px solid var(--line2);margin-top:4px}
+body.bottom .monitor{padding:18px}
+body.bottom img.art{max-height:47vh}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="m"></span>콘텐츠 엔진 <small>STUDIO</small></div>
+  <div class="seg"><button class="tabx on" data-tab="single">단일 카드</button><button class="tabx" data-tab="deck">캐러셀</button></div>
+  <div class="tb-right">
+    <span class="hint">⌘↵ 재생성 · ⌘S 저장</span>
+    <button class="tb-btn" id="layoutbtn">좌측 패널</button>
+    <label class="tgl"><input type="checkbox" id="live" checked> 실시간</label>
+    <button class="tb-btn" id="rand">랜덤</button>
+    <button class="tb-btn" id="savedef">기본값</button>
+    <button class="tb-btn" id="act-save">저장</button>
+    <button class="tb-btn solid" id="act-pub">발행</button>
+  </div>
+</div>
+
+<div class="ws">
+  <!-- rail -->
+  <nav class="rail">
+    <button class="railitem on" data-sec="format"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>종류</span></button>
+    <button class="railitem" data-sec="content"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 6V4M20 6V4M12 6v14M8 20h8"/></svg><span>내용</span></button>
+    <button class="railitem" data-sec="style"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="12" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><path d="M12 22a10 10 0 1 1 0-20c4 0 6 2.5 6 5s-2 3-3.5 3-2.5 1-2.5 2.5S11 22 12 22Z"/></svg><span>스타일</span></button>
+    <button class="railitem" data-sec="bg"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg><span>배경</span></button>
+    <button class="railitem" data-sec="saved"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z"/></svg><span>저장함</span></button>
+  </nav>
+
+  <!-- contextual panel -->
+  <div class="panel">
+    <!-- SINGLE -->
+    <div id="pane-single">
+      <div data-sec="format"><h3>카드 종류</h3><div class="sub">만들 콘텐츠 형식을 고르세요</div><select id="s-format" class="hide"></select><div id="s-formatgrid" class="tgrid"></div></div>
+      <div data-sec="content" class="hide"><h3>내용</h3><div class="grp"><label>AI 초안 (선택)</label><div class="inline"><div class="grow"><input id="s-ai" placeholder="주제 예: 직장인 점심"></div><button class="btn" id="s-aigo" style="width:auto">생성</button></div></div><div id="s-fields" class="cfields"></div><div class="tip">강조는 <code>**단어**</code> → 노란 형광펜</div></div>
+      <div data-sec="style" class="hide"><h3>스타일</h3><div class="sub">프리셋을 누르면 색·서체가 한 번에 적용</div><div id="s-presets" class="tgrid"></div><div class="grp" style="margin-top:14px"><label>색 팔레트</label><select id="s-palette"></select></div><div class="grp"><label>서체</label><select id="s-type"></select></div><button class="btn" id="act-var">🎲 스타일 변형 4종 보기</button></div>
+      <div data-sec="bg" class="hide"><h3>배경 · 세부</h3><div class="grp"><label>배경 방식</label><select id="s-bg"></select></div><div class="grp"><label>배경 이미지 (선택)</label><div class="filerow"><input type="file" id="s-bgfile" accept="image/*"><button class="btn" id="s-bgclear" style="width:auto">지움</button></div></div><div class="two"><div><label>이미지 어둡기 <span id="s-scrimv" style="color:#a9c2ff">34%</span></label><input type="range" id="s-scrim" min="0" max="0.8" step="0.02" value="0.34"></div><div><label>막 방향</label><select id="s-scrimmode"><option value="even">전체</option><option value="bottom">아래로</option><option value="top">위로</option></select></div></div><div class="grp" style="margin-top:13px"><label>계정 핸들</label><input id="s-handle" value="@your_handle"></div>
+        <details class="adv"><summary>고급 (글자 크기 · 직접 색상)</summary><div style="margin-top:10px"><label>글자 크기 <span id="s-scalev" style="color:#a9c2ff">100%</span></label><input type="range" id="s-scale" min="0.7" max="1.4" step="0.05" value="1"></div><label class="cc" style="margin-top:11px"><input type="checkbox" id="s-cc"> 커스텀 색상</label><div class="three"><div><label>강조</label><input type="color" id="s-accent" value="#5b8cff"></div><div><label>글자</label><input type="color" id="s-ink" value="#16203a"></div><div><label>배경</label><input type="color" id="s-bg2" value="#0f0f12"></div></div></details></div>
+    </div>
+    <!-- DECK -->
+    <div id="pane-deck" class="hide">
+      <div data-sec="format"><h3>형식 · 톤</h3><div class="grp"><label>톤</label><select id="d-tone"></select></div><div class="grp"><label>예시 불러오기</label><div class="inline"><div class="grow"><select id="d-bank"></select></div><button class="btn" id="d-load" style="width:auto">적용</button></div></div></div>
+      <div data-sec="content" class="hide"><h3>내용</h3><div class="grp"><label>AI 초안 (선택)</label><div class="inline"><div class="grow"><input id="d-ai" placeholder="주제 예: 워라밸"></div><button class="btn" id="d-aigo" style="width:auto">생성</button></div></div><div id="d-fields" class="cfields"></div></div>
+      <div data-sec="style" class="hide"><h3>스타일</h3><div class="sub">프리셋을 누르면 색·서체가 한 번에 적용</div><div id="d-presets" class="tgrid"></div><div class="grp" style="margin-top:14px"><label>색 팔레트</label><select id="d-palette"></select></div><div class="grp"><label>서체</label><select id="d-type"></select></div></div>
+      <div data-sec="bg" class="hide"><h3>배경 · 세부</h3><div class="grp"><label>배경 방식</label><select id="d-bg"></select></div><div class="grp"><label>배경 이미지 (전 슬라이드)</label><div class="filerow"><input type="file" id="d-bgfile" accept="image/*"><button class="btn" id="d-bgclear" style="width:auto">지움</button></div></div><div class="two"><div><label>이미지 어둡기 <span id="d-scrimv" style="color:#a9c2ff">34%</span></label><input type="range" id="d-scrim" min="0" max="0.8" step="0.02" value="0.34"></div><div><label>막 방향</label><select id="d-scrimmode"><option value="even">전체</option><option value="bottom">아래로</option><option value="top">위로</option></select></div></div><div class="grp" style="margin-top:13px"><label>계정 핸들</label><input id="d-handle" value="@your_handle"></div>
+        <details class="adv"><summary>고급 (글자 크기 · 직접 색상)</summary><div style="margin-top:10px"><label>글자 크기 <span id="d-scalev" style="color:#a9c2ff">100%</span></label><input type="range" id="d-scale" min="0.7" max="1.4" step="0.05" value="1"></div><label class="cc" style="margin-top:11px"><input type="checkbox" id="d-cc"> 커스텀 색상</label><div class="three"><div><label>강조</label><input type="color" id="d-accent" value="#5b8cff"></div><div><label>글자</label><input type="color" id="d-ink" value="#16203a"></div><div><label>배경</label><input type="color" id="d-bg2" value="#0f0f12"></div></div></details></div>
+    </div>
+    <!-- SAVED (shared) -->
+    <div data-sec="saved" class="hide" id="sec-saved"><h3>저장함 (백로그)</h3>
+      <div class="grp"><div class="inline"><div class="grow"><input id="p-name" placeholder="프로젝트 이름"></div><button class="btn" id="p-save" style="width:auto">저장</button></div></div>
+      <div id="plist" class="plist"></div>
+      <pre id="plan" class="plan hide"></pre>
+    </div>
+  </div>
+
+  <!-- stage -->
+  <div class="stage">
+    <div class="monitor">
+      <div id="view-single"><span class="pv"><img id="s-img" class="art hide"><div id="safezone" class="safezone hide"></div></span><div id="s-empty" class="empty">내용을 입력하면 미리보기가 나타납니다</div></div>
+      <div id="view-deck" class="hide" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%"><img id="d-strip" class="strip hide"><div id="d-empty" class="empty">내용을 채우고 생성하세요</div></div>
+    </div>
+    <div id="filmwrap" class="hide" style="padding:0 14px"><div id="d-slides" class="filmstrip"></div></div>
+    <div id="var-grid" class="vargrid hide"></div>
+    <div class="toolbar">
+      <div class="tbrow">
+        <div class="ratios" id="ratios"></div>
+        <button class="chipbtn" id="act-safe">세이프존</button>
+        <div class="status" id="status"></div>
+      </div>
+      <div class="tbrow">
+        <button class="abtn solid" id="act-gen">재생성</button>
+        <a class="abtn" id="act-dl">다운로드</a>
+        <button class="abtn" id="act-copy">이미지 복사</button>
+        <button class="abtn" id="act-cap">캡션 복사</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=(s)=>document.querySelector(s);
+const setStatus=(t,cls)=>{const s=$('#status');s.textContent=t;s.className='status '+(cls||'')};
+function fill(sel,arr,val,map){sel.innerHTML=arr.map(o=>`<option value="${o}"${o===val?' selected':''}>${(map&&map[o])||o}</option>`).join('')}
+const T_FMT={editorial:'에디토리얼',modern:'모던 대형',swiss:'스위스',center:'센터 인용',versus:'기대vs현실',headline:'가짜 속보',greentext:'음슴체 썰'};
+const T_PAL={'ink-paper':'잉크 페이퍼',noir:'느와르',fog:'포그 그레이',midnight:'미드나잇',sand:'샌드',bone:'본 화이트',forest:'포레스트',oxblood:'옥스블러드',signal:'시그널 옐로우'};
+const T_TYPE={sans:'산세리프',serif:'세리프',mixed:'믹스',impact:'임팩트',round:'라운드(주아)',dotum:'돋움(레트로)'};
+const T_TONE={earnest:'진지(공감)',ironic:'고전 풍자',gap:'이상vs현실',steps:'단계별'};
+const T_BG={solid:'단색',gradient:'그라데이션',grain:'질감',image:'이미지'};
+const T_RATIO={square:'1:1',portrait:'4:5',story:'9:16',wide:'16:9',pin:'2:3'};
+const T_BANK={'satire-kr':'고전 명언 풍자','satire-gap-kr':'이상vs현실','steps-kr':'단계별 짤'};
+const T_PRESET={editorial:'에디토리얼',noir:'느와르',swiss:'스위스',midnight:'미드나잇',sand:'샌드',forest:'포레스트',oxblood:'옥스블러드',bone:'본'};
+const SF={editorial:['kicker','text','author','source'],modern:['text','author','source'],swiss:['text','author','source'],center:['text','author','source'],versus:['kicker','aLabel','aText','bLabel','bText'],headline:['kicker','text','source'],greentext:['kicker','text']};
+const LABELS={text:'본문 / 인용문',author:'저자',source:'출처 / 본문',kicker:'상단 라벨 / 주제',aLabel:'A 라벨',aText:'A 내용',bLabel:'B 라벨',bText:'B 내용'};
+const AREA=new Set(['text','aText','bText']);
+const SF_EX={editorial:{text:'You have power over your mind — not outside events.',author:'Marcus Aurelius',source:'Meditations, VIII'},versus:{kicker:'월급날',aLabel:'기대',aText:'이번 달은 모은다',bLabel:'현실',bText:'월급은 통장을 **스칠 뿐**'},headline:{kicker:'속보',text:'또 새벽 3시에 라면 끓인 사람 발견',source:'본인 "이번이 마지막"… 어제도 같은 발언'},greentext:{kicker:'자취썰',text:'>월급 들어옴\n>이번 달은 아낀다 다짐함\n>1+1에 다섯 개 집음\n>냉동실 여니 지난달 산 거 그대로 있음\n난 분명 아끼고 있었음\n>그때 내 표정'}};
+const DF={earnest:['eyebrow','hook','tension','turn','quote','author','source','apply','rehook','cta'],ironic:['eyebrow','hook','tension','quote','author','source','rehook','cta'],gap:['eyebrow','hook','turn','beats','rehook','cta'],steps:['eyebrow','hook','beats','rehook','cta']};
+const DLAB={eyebrow:'eyebrow (라벨)',hook:'표지 훅 / 제목',tension:'긴장 / 빌드',turn:'전환 · "그런데 현실은?"',quote:'원문',author:'저자 (풍자=오귀속)',source:'출처',apply:'적용',rehook:'재훅 / 펀치라인',cta:'CTA',beats:'사례·단계 (한 줄 = 한 슬라이드)'};
+const DAREA=new Set(['tension','turn','quote','apply','rehook','beats']);
+
+let OPT={},THUMBS={formats:{},presets:{}},sBgImage='',dBgImage='',lastUrl='',lastBlob=null,lastSlides=[],curSec='format';
+function buildFields(host,keys,labels,areas,vals={}){host.innerHTML=keys.map(k=>{const v=String(vals[k]??'').replace(/"/g,'&quot;');const lab=labels[k]||k;return `<div><label>${lab}</label>`+(areas.has(k)?`<textarea data-k="${k}">${vals[k]??''}</textarea>`:`<input data-k="${k}" value="${v}">`)+`</div>`}).join('')}
+const readFields=(host)=>{const o={};host.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value);return o};
+function renderSingleFields(vals){buildFields($('#s-fields'),SF[$('#s-format').value],LABELS,AREA,vals||SF_EX[$('#s-format').value]||{})}
+function renderDeckFields(vals){buildFields($('#d-fields'),DF[$('#d-tone').value],DLAB,DAREA,vals||{})}
+function renderFormatGrid(){$('#s-formatgrid').innerHTML=OPT.singleFormats.map(f=>`<button class="thumb ${f===$('#s-format').value?'on':''}" data-f="${f}"><img src="data:image/png;base64,${THUMBS.formats[f]||''}"><span>${T_FMT[f]||f}</span></button>`).join('');$('#s-formatgrid').querySelectorAll('.thumb').forEach(b=>b.onclick=()=>{$('#s-format').value=b.dataset.f;renderSingleFields();renderFormatGrid();liveGen()})}
+function renderPresetGrids(){['s','d'].forEach(P=>{const h=$('#'+P+'-presets');if(!h)return;h.innerHTML=Object.keys(THUMBS.presets).map(k=>`<button class="thumb" data-p="${k}"><img src="data:image/png;base64,${THUMBS.presets[k]}"><span>${T_PRESET[k]||k}</span></button>`).join('');h.querySelectorAll('.thumb').forEach(b=>b.onclick=()=>applyPreset(P,OPT.presetDefs[b.dataset.p]))})}
+function applyPreset(P,def){if(!def)return;$('#'+P+'-palette').value=def.palette;$('#'+P+'-type').value=def.type;$('#'+P+'-bg').value=def.background;setStatus('테마 적용','ok');liveGen()}
+function renderRatios(){$('#ratios').innerHTML=OPT.ratios.map(r=>`<button data-r="${r}" class="${r===$('#s-ratio').value?'on':''}">${T_RATIO[r]||r}</button>`).join('');$('#ratios').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('#s-ratio').value=b.dataset.r;$('#d-ratio').value=b.dataset.r;renderRatios();liveGen()})}
+
+function colors(p){if(!$('#'+p+'-cc').checked)return{};return{accent:$('#'+p+'-accent').value,bg2:$('#'+p+'-bg2').value,ink:$('#'+p+'-ink').value}}
+function scrimOf(p){return{scrimMode:$('#'+p+'-scrimmode').value,scrimStrength:Number($('#'+p+'-scrim').value)}}
+function singleBody(){return{layout:$('#s-format').value,palette:$('#s-palette').value,type:$('#s-type').value,background:$('#s-bg').value,ratio:$('#s-ratio').value,scale:Number($('#s-scale').value),content:{...readFields($('#s-fields')),handle:$('#s-handle').value},bgImage:sBgImage||undefined,...scrimOf('s'),...colors('s')}}
+function deckBody(){const f=readFields($('#d-fields'));const piece={id:'web',tone:$('#d-tone').value,...f};if(f.beats!==undefined)piece.beats=f.beats.split('\n').map(s=>s.trim()).filter(Boolean);return{piece,palette:$('#d-palette').value,type:$('#d-type').value,background:$('#d-bg').value,ratio:$('#d-ratio').value,scale:Number($('#d-scale').value),handle:$('#d-handle').value,bgImage:dBgImage||undefined,...scrimOf('d'),...colors('d')}}
+
+async function genSingle(){setStatus('렌더링…');$('#s-img').style.opacity='.5';try{const r=await fetch('/api/render',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(singleBody())});if(!r.ok)throw new Error((await r.json()).error||r.status);lastBlob=await r.blob();lastUrl=URL.createObjectURL(lastBlob);$('#s-img').src=lastUrl;$('#s-img').classList.remove('hide');$('#s-empty').classList.add('hide');$('#act-dl').href=lastUrl;$('#act-dl').download=$('#s-format').value+'.png';setStatus('완료','ok')}catch(e){setStatus(e.message,'err')}finally{$('#s-img').style.opacity='1'}}
+async function genDeck(){setStatus('캐러셀 렌더링…');try{const r=await fetch('/api/deck',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(deckBody())});if(!r.ok)throw new Error((await r.json()).error||r.status);const d=await r.json();lastSlides=d.slides;$('#d-strip').src='data:image/png;base64,'+d.strip;$('#d-strip').classList.remove('hide');$('#d-empty').classList.add('hide');$('#filmwrap').classList.remove('hide');$('#d-slides').innerHTML=d.slides.map((b,i)=>{const u='data:image/png;base64,'+b;return`<a href="${u}" download="slide-${String(i+1).padStart(2,'0')}.png"><img src="${u}"></a>`}).join('');setStatus(`완료 — ${d.slides.length}슬라이드`,'ok')}catch(e){setStatus(e.message,'err')}}
+async function aiAssist(kind){const topic=$('#'+(kind==='deck'?'d':'s')+'-ai').value;if(!topic)return setStatus('AI 주제를 입력하세요','err');setStatus('AI 초안 생성…');try{const body=kind==='deck'?{kind:'deck',tone:$('#d-tone').value,topic}:{kind:'single',format:$('#s-format').value,topic};const r=await fetch('/api/assist',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);if(kind==='deck')renderDeckFields(d);else renderSingleFields(d);setStatus('AI 초안 적용','ok');liveGen()}catch(e){setStatus(e.message,'err')}}
+async function getCaption(){const kind=curTab();const body=kind==='deck'?{...deckBody(),kind:'deck'}:{...singleBody(),kind:'single',format:$('#s-format').value};try{const r=await fetch('/api/caption',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);showSection('saved');$('#plan').classList.remove('hide');$('#plan').textContent=d.caption;try{await navigator.clipboard.writeText(d.caption);setStatus('캡션 복사됨','ok')}catch{setStatus('캡션 생성됨(저장함)','ok')}}catch(e){setStatus(e.message,'err')}}
+async function publish(){const kind=curTab();setStatus('발행 계획…');try{const body=kind==='deck'?{...deckBody(),kind:'deck'}:{...singleBody(),kind:'single'};const r=await fetch('/api/publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);showSection('saved');$('#plan').classList.remove('hide');$('#plan').textContent='[미리보기 · 실제 발행 안 됨]\n\n'+(d.plan?d.plan.join('\n'):JSON.stringify(d));setStatus('발행 미리보기 완료','ok')}catch(e){setStatus(e.message,'err')}}
+async function copyImage(){if(!lastBlob)return setStatus('먼저 카드를 만드세요','err');try{await navigator.clipboard.write([new ClipboardItem({'image/png':lastBlob})]);setStatus('이미지 복사됨','ok')}catch{setStatus('이미지 복사 미지원','err')}}
+function downloadAll(){if(!lastSlides.length)return setStatus('먼저 캐러셀을 만드세요','err');lastSlides.forEach((b,i)=>setTimeout(()=>{const a=document.createElement('a');a.href='data:image/png;base64,'+b;a.download='slide-'+String(i+1).padStart(2,'0')+'.png';a.click()},i*250));setStatus(lastSlides.length+'장 저장 시작','ok')}
+async function showVariations(){if(curTab()!=='single')return;setStatus('변형 생성…');try{const r=await fetch('/api/variations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(singleBody())});const v=await r.json();if(!r.ok)throw new Error(v.error);const g=$('#var-grid');g.classList.remove('hide');g.innerHTML=v.map((x,i)=>`<button data-i="${i}"><img src="data:image/png;base64,${x.img}"><span>${T_PRESET[x.preset]||x.preset}</span></button>`).join('');g.querySelectorAll('button').forEach(b=>b.onclick=()=>{const x=v[b.dataset.i];$('#s-palette').value=x.palette;$('#s-type').value=x.type;$('#s-bg').value=x.background;g.classList.add('hide');setStatus('스타일 적용','ok');liveGen()});setStatus('변형 중 하나를 고르세요','ok')}catch(e){setStatus(e.message,'err')}}
+function toggleSafe(){$('#safezone').classList.toggle('hide');$('#act-safe').classList.toggle('on')}
+async function refreshProjects(){const list=await(await fetch('/api/projects')).json();$('#plist').innerHTML=list.length?list.map(p=>`<div class="prow" data-id="${p.id}"><span class="badge ${p.status||'초안'}">${p.status||'초안'}</span><span class="nm">${p.name} · ${p.kind==='deck'?'캐러셀':'카드'}</span><select data-st="${p.id}"><option${p.status==='초안'?' selected':''}>초안</option><option${p.status==='완성'?' selected':''}>완성</option><option${p.status==='발행'?' selected':''}>발행</option></select><span class="x" data-del="${p.id}">×</span></div>`).join(''):'<div class="empty" style="font-size:11.5px">저장된 콘텐츠가 없습니다</div>';$('#plist').querySelectorAll('.nm').forEach(n=>n.onclick=()=>loadProject(n.parentElement.dataset.id));$('#plist').querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>delProject(x.dataset.del));$('#plist').querySelectorAll('[data-st]').forEach(s=>s.onchange=()=>setProjectStatus(s.dataset.st,s.value))}
+async function saveProject(){const tab=curTab();const name=$('#p-name').value||('무제 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));const payload=tab==='deck'?deckBody():singleBody();await fetch('/api/projects',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,kind:tab,status:'초안',payload})});await refreshProjects();setStatus('저장됨 · '+name,'ok')}
+async function setProjectStatus(id,status){const p=await(await fetch('/api/projects/'+id)).json();await fetch('/api/projects',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,name:p.name,kind:p.kind,status,payload:p.payload})});await refreshProjects();setStatus('상태 → '+status,'ok')}
+async function loadProject(id){const p=await(await fetch('/api/projects/'+id)).json();const b=p.payload;if(p.kind==='deck'){switchTab('deck');$('#d-tone').value=b.piece.tone;renderDeckFields({...b.piece,beats:(b.piece.beats||[]).join('\n')});$('#d-palette').value=b.palette;$('#d-type').value=b.type;$('#d-bg').value=b.background;$('#d-ratio').value=b.ratio;$('#d-handle').value=b.handle||'@your_handle';if(b.scale)$('#d-scale').value=b.scale}else{switchTab('single');$('#s-format').value=b.layout;renderSingleFields({...b.content});renderFormatGrid();$('#s-palette').value=b.palette;$('#s-type').value=b.type;$('#s-bg').value=b.background;$('#s-ratio').value=b.ratio;$('#s-handle').value=(b.content&&b.content.handle)||'@your_handle';sBgImage=b.bgImage||''}renderRatios();$('#p-name').value=p.name;setStatus('불러옴 · '+p.name,'ok');liveGen()}
+async function delProject(id){await fetch('/api/projects/'+id,{method:'DELETE'});await refreshProjects();setStatus('삭제됨')}
+async function loadExample(){const ex=await(await fetch('/api/examples')).json();const piece=(ex.deck[$('#d-bank').value]||[])[0];if(!piece)return setStatus('예시 없음','err');if(piece.tone)$('#d-tone').value=piece.tone;renderDeckFields({...piece,beats:(piece.beats||[]).join('\n')});showSection('content');setStatus('예시 불러옴','ok');liveGen()}
+function onBgFile(e,kind){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{if(kind==='d')dBgImage=rd.result;else sBgImage=rd.result;setStatus('배경 이미지 적용','ok');liveGen()};rd.readAsDataURL(f)}
+async function saveDefaults(){const d={handle:$('#s-handle').value,palette:$('#s-palette').value,type:$('#s-type').value,ratio:$('#s-ratio').value,bg:$('#s-bg').value};await fetch('/api/defaults',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});setStatus('기본값 저장됨','ok')}
+function applyDefaults(def){if(!def)return;if(def.handle){$('#s-handle').value=def.handle;$('#d-handle').value=def.handle}[['palette'],['type'],['ratio'],['bg']].forEach(([k])=>{if(def[k]){$('#s-'+k).value=def[k];$('#d-'+k).value=def[k]}})}
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+const liveGen=debounce(()=>{if(!$('#live').checked)return;if(curTab()==='deck'){const hk=$('#d-fields [data-k=hook]');if(!hk||!hk.value.trim())return;genDeck()}else genSingle()},440);
+const rpick=(a)=>a[Math.floor(Math.random()*a.length)];
+function randomize(){const P=curTab()==='single'?'s':'d';$('#'+P+'-palette').value=rpick(OPT.palettes);$('#'+P+'-type').value=rpick(OPT.types);$('#'+P+'-bg').value=rpick(['solid','gradient','grain']);if(curTab()==='single'){$('#s-format').value=rpick(OPT.singleFormats);renderSingleFields();renderFormatGrid()}(curTab()==='deck'?genDeck:genSingle)()}
+function setLayout(m){const bottom=m==='bottom';document.body.classList.toggle('bottom',bottom);$('#layoutbtn').textContent=bottom?'좌측 패널':'하단 패널';try{localStorage.setItem('ce_layout',m)}catch{}}
+const curTab=()=>document.querySelector('.tabx.on').dataset.tab;
+function updateActions(){const d=curTab()==='deck';$('#act-copy').classList.toggle('hide',d);$('#act-var').classList.toggle('hide',d);$('#act-dl').textContent=d?'전체 저장':'다운로드'}
+function showSection(sec){curSec=sec;document.querySelectorAll('.railitem').forEach(b=>b.classList.toggle('on',b.dataset.sec===sec));
+  const pane=curTab()==='deck'?'#pane-deck':'#pane-single';
+  document.querySelectorAll(pane+' > [data-sec]').forEach(s=>s.classList.toggle('hide',s.dataset.sec!==sec));
+  $('#pane-single').classList.toggle('hide',curTab()!=='single'||sec==='saved');
+  $('#pane-deck').classList.toggle('hide',curTab()!=='deck'||sec==='saved');
+  $('#sec-saved').classList.toggle('hide',sec!=='saved')}
+function switchTab(t){document.querySelectorAll('.tabx').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('#view-single').classList.toggle('hide',t!=='single');$('#view-deck').classList.toggle('hide',t!=='deck');$('#filmwrap').classList.toggle('hide',t!=='deck'||!lastSlides.length);updateActions();showSection(curSec==='saved'?'format':curSec);liveGen()}
+
+async function init(){
+  OPT=await(await fetch('/api/options')).json();
+  fill($('#s-format'),OPT.singleFormats,'versus');fill($('#s-palette'),OPT.palettes,'signal',T_PAL);fill($('#s-type'),OPT.types,'sans',T_TYPE);fill($('#s-bg'),OPT.backgrounds,'solid',T_BG);fill($('#s-ratio'),OPT.ratios,'portrait',T_RATIO);
+  fill($('#d-tone'),OPT.tones,'gap',T_TONE);fill($('#d-bank'),OPT.deckBanks,OPT.deckBanks[0],T_BANK);fill($('#d-palette'),OPT.palettes,'signal',T_PAL);fill($('#d-type'),OPT.types,'sans',T_TYPE);fill($('#d-bg'),OPT.backgrounds,'solid',T_BG);fill($('#d-ratio'),OPT.ratios,'portrait',T_RATIO);
+  applyDefaults(await(await fetch('/api/defaults')).json());
+  renderSingleFields();renderDeckFields();renderRatios();
+  fetch('/api/thumbs').then(r=>r.json()).then(t=>{THUMBS=t;renderFormatGrid();renderPresetGrids()});
+  await refreshProjects();updateActions();
+  $('#s-format').onchange=()=>{renderSingleFields();renderFormatGrid()};$('#d-tone').onchange=()=>renderDeckFields();
+  $('#act-gen').onclick=()=>curTab()==='deck'?genDeck():genSingle();
+  $('#act-dl').onclick=(e)=>{if(curTab()==='deck'){e.preventDefault();downloadAll()}};
+  $('#act-copy').onclick=copyImage;$('#act-var').onclick=showVariations;$('#act-cap').onclick=getCaption;$('#act-safe').onclick=toggleSafe;$('#act-pub').onclick=publish;$('#act-save').onclick=saveProject;
+  $('#d-load').onclick=loadExample;$('#s-aigo').onclick=()=>aiAssist('single');$('#d-aigo').onclick=()=>aiAssist('deck');
+  $('#s-scale').oninput=()=>$('#s-scalev').textContent=Math.round($('#s-scale').value*100)+'%';$('#d-scale').oninput=()=>$('#d-scalev').textContent=Math.round($('#d-scale').value*100)+'%';
+  $('#s-scrim').oninput=()=>$('#s-scrimv').textContent=Math.round($('#s-scrim').value*100)+'%';$('#d-scrim').oninput=()=>$('#d-scrimv').textContent=Math.round($('#d-scrim').value*100)+'%';
+  $('#s-bgfile').onchange=(e)=>onBgFile(e,'s');$('#s-bgclear').onclick=()=>{sBgImage='';$('#s-bgfile').value='';liveGen()};
+  $('#d-bgfile').onchange=(e)=>onBgFile(e,'d');$('#d-bgclear').onclick=()=>{dBgImage='';$('#d-bgfile').value='';liveGen()};
+  $('#p-save').onclick=saveProject;$('#savedef').onclick=saveDefaults;$('#rand').onclick=randomize;$('#live').onchange=()=>{if($('#live').checked)liveGen()};
+  let lm='bottom';try{lm=localStorage.getItem('ce_layout')||'bottom'}catch{}setLayout(lm);
+  $('#layoutbtn').onclick=()=>setLayout(document.body.classList.contains('bottom')?'left':'bottom');
+  document.querySelectorAll('.tabx').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+  document.querySelectorAll('.railitem').forEach(b=>b.onclick=()=>showSection(b.dataset.sec));
+  $('.panel').addEventListener('input',liveGen);$('.panel').addEventListener('change',liveGen);
+  document.addEventListener('keydown',(e)=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();curTab()==='deck'?genDeck():genSingle()}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject()}});
+  genSingle();
+}
+init();
+</script>
+</body>
+</html>
